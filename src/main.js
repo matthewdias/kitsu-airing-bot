@@ -1,4 +1,5 @@
 import 'babel-polyfill'
+import http from 'http'
 import OAuth2 from 'client-oauth2'
 import JsonApi from 'devour-client'
 import fetch from 'node-fetch'
@@ -187,3 +188,10 @@ const main = async () => {
 }
 
 new CronJob('00 00 00 * * *', main, () => {}, true, 'Asia/Tokyo')
+
+let port = process.env.PORT || 3000
+const server = http.createServer((request, response) => {
+  response.write('healthy')
+})
+server.listen(port)
+console.log('server running on port: ' + port)
