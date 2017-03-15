@@ -88,7 +88,8 @@ const main = async () => {
   let list = await fetch(malUrl + '/animelist/' + username).then(res => res.json()).then(json => json.anime)
 
   let day = moment().format('dddd').toLowerCase()
-  let schedule = await fetch(malUrl + '/anime/schedule').then(res => res.json()).then(json => json[day])
+  let schedule = await fetch(malUrl + '/anime/schedule').then(res => res.json()).then(json => json['tuesday'])
+  // let schedule = await fetch(malUrl + '/anime/schedule').then(res => res.json()).then(json => json[day])
 
   let malIds = schedule.filter((airing) => {
     let found = false;
@@ -100,6 +101,7 @@ const main = async () => {
     return found;
   }).map(anime => anime.id)
 
+  console.log('malIds: ')
   console.log(malIds)
 
   let mappings = await Promise.all(malIds.map(async (malId) => {
@@ -114,6 +116,7 @@ const main = async () => {
     return mapping[0]
   }))
 
+  console.log('mappings:')
   console.log(mappings)
 
   let kitsuIds = await Promise.all(mappings.map(async (mapping) => {
@@ -121,6 +124,7 @@ const main = async () => {
     return anime.id
   }))
 
+  console.log('kitsuIds:')
   console.log(kitsuIds)
 
   let library = await Promise.all(kitsuIds.map(async (mediaId) => {
@@ -128,9 +132,11 @@ const main = async () => {
       filter: { userId, status: 'current', kind: 'anime', mediaId },
       page: { limit: 200 }
     })
-    return { animeId: mediaId, progress: entry[0].progress }
+    let { progress, id } = entry[0]
+    return { animeId: mediaId, progress, entryId: id}
   }))
 
+  console.log('library:')
   console.log(library)
 
   let airing = await Promise.all(library.map(async (entry) => {
@@ -146,10 +152,11 @@ const main = async () => {
     }
   }))
 
+  console.log('airing:')
   console.log(airing)
 
   await Promise.all(airing.map(async (anime) => {
-    let { animeId, progress } = anime
+    let { animeId, progress, entryId } = anime
     let data = {
       content: "Episode " + (progress + 1),
       nsfw: false,
@@ -170,7 +177,13 @@ const main = async () => {
       return
     }
 
+    console.log('post:')
     console.log(post)
+
+    let updatedEntry = await Kitsu.update('libraryEntry', { id: entryId, progress: progress + 1})
+
+    console.log('updatedEntry:')
+    console.log(updatedEntry)
   }))
 }
 
