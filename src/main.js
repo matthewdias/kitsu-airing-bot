@@ -4,8 +4,7 @@ import OAuth2 from 'client-oauth2'
 import JsonApi from 'devour-client'
 import fetch from 'node-fetch'
 import moment from 'moment'
-// import { CrobJob } from 'cron'
-const CronJob = require('cron').CronJob;
+import { CronJob } from 'cron'
 
 const baseUrl = process.env.KITSU_HOST + '/api'
 const username = process.env.USER
