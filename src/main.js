@@ -56,7 +56,7 @@ Kitsu.define('mapping', {
   }
 })
 
-Kitsu.define('media', {
+Kitsu.define('anime', {
   episodes: {
     jsonApi: 'hasMany',
     type: 'episodes'
@@ -75,7 +75,7 @@ Kitsu.define('libraryEntry', {
   progress: '',
   media: {
     jsonApi: 'hasOne',
-    type: 'media'
+    type: 'anime'
   },
   user: {
     jsonApi: 'hasOne',
@@ -105,24 +105,16 @@ const main = async () => {
   console.log('malIds: ')
   console.log(malIds)
 
-  let mappings = await Promise.all(malIds.map(async (malId) => {
+  let kitsuIds = await Promise.all(malIds.map(async (malId) => {
     let mapping = await Kitsu.findAll('mapping', {
       filter: {
         externalSite: 'myanimelist/anime',
         externalId: malId
       },
-      // include: 'media',
+      include: 'media',
       page: { limit: 1 }
     })
-    return mapping[0]
-  }))
-
-  console.log('mappings:')
-  console.log(mappings)
-
-  let kitsuIds = await Promise.all(mappings.map(async (mapping) => {
-    let anime = await Kitsu.request(Kitsu.apiUrl + `/mappings/${mapping.id}/relationships/media`, 'GET')
-    return anime.id
+    return mapping[0].media.id
   }))
 
   console.log('kitsuIds:')
@@ -142,15 +134,13 @@ const main = async () => {
 
   let airing = await Promise.all(library.map(async (entry) => {
     let { animeId, progress } = entry
-    let episodes
-    try {
-      episodes = await Kitsu.one('anime', animeId).all('episode').get()
-      let episode = episodes.filter((episode) => episode.number == progress + 1)[0]
-      return { ...entry, episode }
-    }
-    catch (error) {
-      return entry
-    }
+    let episode = await Kitsu.findAll('episode', {
+      filter: {
+        mediaId: animeId,
+        number: progress + 1
+      }
+    })[0]
+    return { ...entry, episode }
   }))
 
   console.log('airing:')
