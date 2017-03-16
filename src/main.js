@@ -4,7 +4,10 @@ import OAuth2 from 'client-oauth2'
 import JsonApi from 'devour-client'
 import fetch from 'node-fetch'
 import moment from 'moment'
+import tz from 'moment-timezone'
 import { CronJob } from 'cron'
+
+const timeZone = 'Asia/Tokyo'
 
 const baseUrl = process.env.KITSU_HOST + '/api'
 const username = process.env.USER
@@ -86,9 +89,8 @@ const main = async () => {
 
   let list = await fetch(malUrl + '/animelist/' + username).then(res => res.json()).then(json => json.anime)
 
-  let day = moment().format('dddd').toLowerCase()
-  let schedule = await fetch(malUrl + '/anime/schedule').then(res => res.json()).then(json => json['tuesday'])
-  // let schedule = await fetch(malUrl + '/anime/schedule').then(res => res.json()).then(json => json[day])
+  let day = moment().tz(timeZone).format('dddd').toLowerCase()
+  let schedule = await fetch(malUrl + '/anime/schedule').then(res => res.json()).then(json => json[day])
 
   let malIds = schedule.filter((airing) => {
     let found = false;
@@ -186,11 +188,12 @@ const main = async () => {
   }))
 }
 
-new CronJob('00 00 00 * * *', main, () => {}, true, 'Asia/Tokyo')
+new CronJob('00 00 00 * * *', main, () => {}, true, timeZone)
 
 let port = process.env.PORT || 3000
 const server = http.createServer((request, response) => {
   response.write('healthy')
+  response.end()
 })
 server.listen(port)
 console.log('server running on port: ' + port)
