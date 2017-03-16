@@ -146,7 +146,7 @@ const main = async () => {
   console.log('airing:')
   console.log(airing)
 
-  await Promise.all(airing.map(async (anime) => {
+  airing.forEach(async (anime, i) => {
     let { animeId, progress, entryId } = anime
     let data = {
       content: "Episode " + (progress + 1),
@@ -162,20 +162,25 @@ const main = async () => {
       data.content += `: ${canonicalTitle}\n\nSynopsis: ${synopsis}\n\n${thumbnail.original}`
     }
     let post
-    try { post = await Kitsu.create('post', data) }
-    catch (error) {
-      console.log(error)
-      return
-    }
+    ((i) => {
+      setTimeout(async () => {
+        console.log(new Date().getSeconds())
+        try { post = await Kitsu.create('post', data) }
+        catch (error) {
+          console.log(error)
+          return
+        }
 
-    console.log('post:')
-    console.log(post)
+        console.log('post:')
+        console.log(post)
 
-    let updatedEntry = await Kitsu.update('libraryEntry', { id: entryId, progress: progress + 1})
+        let updatedEntry = await Kitsu.update('libraryEntry', { id: entryId, progress: progress + 1})
 
-    console.log('updatedEntry:')
-    console.log(updatedEntry)
-  }))
+        console.log('updatedEntry:')
+        console.log(updatedEntry)
+      }, 25000 * i)
+    })(i)
+  })
 }
 
 new CronJob('00 00 00 * * *', main, () => {}, true, timeZone)
