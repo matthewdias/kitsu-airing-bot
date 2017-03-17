@@ -164,7 +164,6 @@ const main = async () => {
     let post
     ((i) => {
       setTimeout(async () => {
-        console.log(new Date().getSeconds())
         try { post = await Kitsu.create('post', data) }
         catch (error) {
           console.log(error)
