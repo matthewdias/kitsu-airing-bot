@@ -123,7 +123,7 @@ const main = async () => {
   let library = await Promise.all(kitsuIds.map(async (mediaId) => {
     let entry = await Kitsu.findAll('libraryEntry', {
       filter: { userId, status: 'current', kind: 'anime', mediaId },
-      page: { limit: 200 }
+      page: { limit: 1 }
     })
     let { progress, id } = entry[0]
     return { animeId: mediaId, progress, entryId: id}
